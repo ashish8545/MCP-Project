@@ -1,0 +1,28 @@
+{
+  "name": "mcp-db-server",
+  "version": "1.0.0",
+  "description": "MCP Database Server for PostgreSQL",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/stdio.js",
+    "start:http": "node build/http.js",
+    "start:stdio": "node build/stdio.js",
+    "dev": "tsc && node build/http.js"
+  },
+  "keywords": ["mcp", "database", "postgresql"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.2",
+    "express": "^5.1.0",
+    "pg": "^8.16.3",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.2.1",
+    "@types/pg": "^8.15.5",
+    "typescript": "^5.9.2"
+  }
+}

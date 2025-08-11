@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  # MCP Database Server - Standalone Container
+  mcp-server:
+    build: .
+    container_name: mcp-db-server
+    env_file:
+      - .env
+    environment:
+      PG_HOST: ${PG_HOST:-postgres}
+      PG_PORT: ${PG_PORT:-5432}
+      PG_DATABASE: ${PG_DATABASE:-mcp_database}
+      PG_USER: ${PG_USER:-postgres}
+      PG_PASSWORD: ${PG_PASSWORD:-your_password}
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+networks:
+  mcp-network:
+    external: true
+    name: postgres-db_mcp-network

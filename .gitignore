@@ -1,0 +1,27 @@
+# Environment Variables (sensitive data)
+.env
+*.env
+
+# Node.js dependencies
+node_modules/
+
+# TypeScript build output
+build/
+dist/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp

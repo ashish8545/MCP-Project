@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  # MCP Database Server - Development Standalone Container
+  mcp-server:
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: mcp-db-server-dev
+    environment:
+      PG_HOST: ${PG_HOST:-postgres}
+      PG_PORT: ${PG_PORT:-5432}
+      PG_DATABASE: ${PG_DATABASE:-mcp_database}
+      PG_USER: ${PG_USER:-postgres}
+      PG_PASSWORD: ${PG_PASSWORD:-your_password}
+      PORT: 3000
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - mcp-network-dev
+    restart: unless-stopped
+    command: npm run dev
+
+networks:
+  mcp-network-dev:
+    external: true
