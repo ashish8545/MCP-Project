@@ -1,0 +1,25 @@
+{
+  "name": "user-agent",
+  "version": "1.0.0",
+  "description": "User Agent with MCP client and minimal web UI",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "dev": "tsc && node build/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.2",
+    "axios": "^1.7.7",
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.3",
+    "@types/node": "^20.14.10",
+    "typescript": "^5.9.2"
+  }
+}
+
+

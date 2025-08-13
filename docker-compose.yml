@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  user-agent:
+    build: ./user-agent
+    environment:
+      - PORT=3002
+      - MCP_SERVER_URL=http://mcp-db-server:3000/mcp
+      - LLM_API_URL=http://llm-container:11434
+    ports:
+      - "3002:3002"
+    depends_on:
+      - mcp-db-server
+      - llm-container
+    networks:
+      - mcpnet
+
+  llm-container:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    networks:
+      - mcpnet
+
+  mcp-db-server:
+    build: ./mcp-db-server
+    environment:
+      - PORT=3000
+      - PG_HOST=postgres-db
+      - PG_USER=postgres
+      - PG_DATABASE=mcp_database
+      - PG_PASSWORD=your_password
+      - PG_PORT=5432
+    ports:
+      - "3001:3000"
+    depends_on:
+      - postgres-db
+    networks:
+      - mcpnet
+
+  postgres-db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=mcp_database
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=your_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres-db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - mcpnet
+
+volumes:
+  pgdata:
+  ollama_data:
+
+networks:
+  mcpnet:
+    driver: bridge
+
+
