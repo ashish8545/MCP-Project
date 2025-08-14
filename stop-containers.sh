@@ -64,4 +64,4 @@ print_status "All containers stopped successfully!"
 
 echo ""
 echo "📊 Remaining containers:"
-docker ps --filter "name=mcp\|user-agent\|llm-container" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || echo "No MCP containers running"
+docker ps --filter "name=mcp" --filter "name=user-agent" --filter "name=llm-container" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || echo "No MCP containers running"
