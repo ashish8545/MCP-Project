@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # MCP Database Server - Standalone Container
   mcp-server:

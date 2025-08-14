@@ -1,311 +1,356 @@
-# MCP Database Server
+# MCP Multi-Container Architecture
 
-A Model Context Protocol (MCP) server that provides database operations via HTTP endpoints, built with Node.js, TypeScript, and PostgreSQL.
+A complete Model Context Protocol (MCP) ecosystem with database operations, LLM integration, and a user-friendly web interface. Built with Node.js, TypeScript, PostgreSQL, Ollama, and Docker.
+
+## Architecture Overview
+
+This project implements a full-stack MCP architecture with four interconnected services:
+
+- **PostgreSQL Database** - Data persistence layer
+- **MCP Database Server** - Protocol server with database tools  
+- **LLM Container** - Ollama-based language model service
+- **User Agent** - Web interface and orchestration layer
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   User Agent    │───>│   MCP Server    │───>│  PostgreSQL DB  │    │  LLM Container  │
+│   (Port 3002)   │    │   (Port 3001)   │    │   (Port 5432)   │    │  (Port 11434)   │
+│                 │    │                 │    │                 │    │                 │
+│ • Web UI        │    │ • Database Tools│    │ • Data Storage  │    │ • Ollama API    │
+│ • MCP Client    │<───│ • HTTP/MCP API  │    │ • Sample Data   │    │ • Multiple LLMs │
+│ • LLM Interface │    │ • Health Checks │    │ • Persistence   │    │ • SQL Generation│
+└─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
+```
 
 ## Project Structure
 
 ```
-try1/
-├── mcp-db-server/          # MCP Server Application
-│   ├── http.ts             # HTTP server implementation
-│   ├── stdio.ts            # STDIO server implementation
-│   ├── package.json        # Node.js dependencies
-│   ├── tsconfig.json       # TypeScript configuration
-│   ├── Dockerfile          # Production Docker image
-│   ├── Dockerfile.dev      # Development Docker image
-│   ├── docker-compose.mcp.yml      # Production MCP container
-│   ├── docker-compose.mcp.dev.yml  # Development MCP container
-│   └── mcp-server.sh       # MCP server management script
-├── postgres-db/            # PostgreSQL Database
-│   ├── init.sql            # Database initialization script
-│   ├── docker-compose.yml  # Production PostgreSQL container
+MCP Project/
+├── user-agent/                # User Agent Service
+│   ├── src/
+│   │   └── index.ts           # Express server with MCP client
+│   ├── public/                # Web UI assets
+│   │   ├── index.html         # Main interface
+│   │   ├── app.js             # Frontend JavaScript
+│   │   └── styles.css         # Styling
+│   ├── package.json           # Dependencies
+│   ├── Dockerfile             # Container definition
+│   └── user-agent.sh          # Management script
+├── llm-container/             # LLM Service
+│   ├── Dockerfile             # Ollama container setup
+│   ├── init-models.sh         # Model initialization
+│   └── llm.sh                 # Management script
+├── mcp-db-server/             # MCP Database Server
+│   ├── http.ts                # HTTP server implementation
+│   ├── stdio.ts               # STDIO server implementation
+│   ├── package.json           # Node.js dependencies
+│   ├── tsconfig.json          # TypeScript configuration
+│   ├── Dockerfile             # Production Docker image
+│   ├── Dockerfile.dev         # Development Docker image
+│   ├── docker-compose.mcp.yml # Production MCP container
+│   ├── docker-compose.mcp.dev.yml # Development MCP container
+│   └── mcp-server.sh          # MCP server management script
+├── postgres-db/               # PostgreSQL Database
+│   ├── init.sql               # Database initialization script
+│   ├── docker-compose.yml     # Production PostgreSQL container
 │   ├── docker-compose.dev.yml # Development PostgreSQL container
-│   └── postgres.sh         # PostgreSQL management script
-├── start-containers.sh     # Helper script to start all containers
-├── stop-containers.sh      # Helper script to stop all containers
-├── test-docker.sh          # Test script for the entire setup
-└── README.md               # This file
+│   └── postgres.sh            # PostgreSQL management script
+├── docker-compose.yml         # Main orchestration file
+├── start-containers.sh        # Start all containers
+├── stop-containers.sh         # Stop all containers
+├── test-docker.sh             # Test script for the entire setup
+└── README.md                  # This file
 ```
 
 ## Features
 
+### Core Components
 - **Database Operations**: Execute raw SQL queries, insert records, and retrieve data
+- **LLM Integration**: Natural language to SQL conversion using Ollama
+- **Web Interface**: User-friendly chat interface for database interactions
 - **HTTP Transport**: RESTful API endpoints for MCP communication
-- **PostgreSQL Integration**: Full PostgreSQL database support
-- **Health Checks**: Built-in health monitoring endpoints
-- **Docker Ready**: Complete containerization with Docker and Docker Compose
-- **Modular Structure**: Separated containers for easy management and scaling
+- **PostgreSQL Integration**: Full PostgreSQL database support with sample data
+- **Health Checks**: Built-in health monitoring across all services
+
+### Advanced Features
+- **Multi-Model Support**: Choose from llama2, codellama, mistral models
+- **Real-time Communication**: WebSocket-like interactions via HTTP streaming
+- **Container Orchestration**: Complete Docker Compose setup
+- **Individual Service Management**: Dedicated scripts for each container
+- **Development & Production Modes**: Separate configurations for different environments
 
 ## Quick Start with Docker
 
 ### Prerequisites
 
-- Docker
-- Docker Compose
+- Docker (20.10+)
+- Docker Compose (2.0+)
+- At least 8GB RAM (recommended for LLM models)
+- 10GB disk space (for models and data)
 
 ### 1. Clone and Setup
 
 ```bash
 git clone <repository-url>
-cd try1
+cd mcp-multi-container
 ```
 
-### 2. Configure Environment (Optional)
+### 2. Clean Up (First Time Only)
 
-Each service has its own environment configuration. Copy the example files and modify as needed:
+If you have any existing MCP containers, clean them up first:
 
 ```bash
-# Configure PostgreSQL
-cd postgres-db
-cp env.example .env
-# Edit .env to customize database settings
-cd ..
-
-# Configure MCP Server
-cd mcp-db-server
-cp env.example .env
-# Edit .env to customize server settings
-cd ..
+./cleanup-containers.sh
 ```
 
-**Note**: Make sure the database credentials in both `.env` files match.
+### 3. Start All Services
 
-### 3. Start PostgreSQL Database
-
-```bash
-# Start PostgreSQL container
-cd postgres-db
-./postgres.sh start
-cd ..
-```
-
-### 4. Start MCP Server
+Use the convenient startup script to launch the entire stack:
 
 ```bash
-# Start MCP server container (connects to PostgreSQL)
-cd mcp-db-server
-./mcp-server.sh start
-cd ..
-```
-
-### 5. Verify Installation
-
-Check if the services are running:
-
-```bash
-# Check all service status
-docker ps
-
-# Test health endpoint
-curl http://localhost:3000/health
-```
-
-### 6. Stop Services
-
-```bash
-# Stop MCP server
-cd mcp-db-server
-./mcp-server.sh stop
-cd ..
-
-# Stop PostgreSQL
-cd postgres-db
-./postgres.sh stop
-cd ..
-```
-
-### 7. Helper Scripts (Optional)
-
-For convenience, you can use the provided helper scripts:
-
-```bash
-# Start all containers
 ./start-containers.sh
-
-# Stop all containers
-./stop-containers.sh
-
-# Test the setup
-./test-docker.sh
 ```
 
-## Manual Docker Build
+This will start all containers together using Docker Compose with proper dependency handling.
 
-If you prefer to build and run containers manually:
+### 4. Access the Application
+
+Once all containers are running:
+
+- **Web Interface**: http://localhost:3002
+- **MCP Server Health**: http://localhost:3001/health
+- **Ollama API**: http://localhost:11434
+- **PostgreSQL**: localhost:5432
+
+### 5. Using the Web Interface
+
+1. Open http://localhost:3002 in your browser
+2. Use natural language to query your database:
+   - "Show me all employees"
+   - "Which projects are currently active?"
+   - "Who is working on project Alpha?"
+3. The system will convert your requests to SQL and execute them
+
+### 6. Stop All Services
 
 ```bash
-# Create the network for container communication
-docker network create mcp-network
-
-# Start PostgreSQL container
-docker run -d \
-  --name mcp-postgres \
-  --network mcp-network \
-  -e POSTGRES_DB=mcp_database \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=your_secure_password \
-  -p 5432:5432 \
-  -v postgres_data:/var/lib/postgresql/data \
-  postgres:15-alpine
-
-# Build MCP server image
-cd mcp-db-server
-docker build -t mcp-db-server .
-
-# Run MCP server container
-docker run -d \
-  --name mcp-server \
-  --network mcp-network \
-  -p 3000:3000 \
-  -e PG_HOST=mcp-postgres \
-  -e PG_DATABASE=mcp_database \
-  -e PG_USER=postgres \
-  -e PG_PASSWORD=your_password \
-  mcp-db-server
+./stop-containers.sh
 ```
+
+## Individual Container Management
+
+Each service can be managed independently using dedicated scripts:
+
+### PostgreSQL Database
+```bash
+cd postgres-db
+./postgres.sh start            # Start database
+./postgres.sh stop             # Stop database
+./postgres.sh logs             # View logs
+./postgres.sh status           # Check status
+./postgres.sh help             # Show all commands
+```
+
+### MCP Database Server
+```bash
+cd mcp-db-server
+./mcp-server.sh start          # Start MCP server
+./mcp-server.sh stop           # Stop MCP server
+./mcp-server.sh logs           # View logs
+./mcp-server.sh status         # Check status
+./mcp-server.sh help           # Show all commands
+```
+
+### LLM Container
+```bash
+cd llm-container
+./llm.sh start                 # Start Ollama
+./llm.sh stop                  # Stop Ollama
+./llm.sh logs                  # View logs
+./llm.sh models                # List available models
+./llm.sh status                # Check status
+./llm.sh help                  # Show all commands
+```
+
+### User Agent
+```bash
+cd user-agent
+./user-agent.sh start          # Start web interface
+./user-agent.sh stop           # Stop web interface
+./user-agent.sh logs           # View logs
+./user-agent.sh status         # Check status
+./user-agent.sh help           # Show all commands
+```
+
+## Configuration
+
+### Environment Variables
+
+The system uses several environment variables for configuration:
+
+| Service       | Variable             | Default                         | Description          |
+|---------------|----------------------|---------------------------------|----------------------|
+| PostgreSQL    | `POSTGRES_DB`        | `mcp_database`                  | Database name        |
+| PostgreSQL    | `POSTGRES_USER`      | `postgres`                      | Database user        |
+| PostgreSQL    | `POSTGRES_PASSWORD`  | `your_password`                 | Database password    |
+| MCP Server    | `PG_HOST`            | `postgres-db`                   | PostgreSQL host      |
+| MCP Server    | `PG_PORT`            | `5432`                          | PostgreSQL port      |
+| MCP Server    | `PORT`               | `3000`                          | Application port     |
+| User Agent    | `MCP_SERVER_URL`     | `http://mcp-db-server:3000/mcp` | MCP endpoint         |
+| User Agent    | `LLM_API_URL`        | `http://llm-container:11434`    | Ollama API           |
+| User Agent    | `PORT`               | `3002`                          | Web interface port   |
+| LLM Container | `OLLAMA_HOST`        | `0.0.0.0`                       | Ollama bind address  |
+
+### Custom Configuration
+
+1. Copy example environment files:
+```bash
+# PostgreSQL configuration
+cd postgres-db && cp env.example .env
+
+# MCP Server configuration  
+cd ../mcp-db-server && cp env.example .env
+```
+
+2. Edit the `.env` files with your preferred settings
+3. Restart the containers to apply changes
 
 ## API Endpoints
 
-### Health Check
-```
-GET /health
-```
+### User Agent (Port 3002)
+- `GET /` - Web interface
+- `POST /query` - Natural language database queries
+- `GET /health` - Health check
 
-### MCP Endpoints
-```
-POST /mcp    - Handle MCP requests
-GET /mcp     - Server-Sent Events (SSE)
-DELETE /mcp  - Terminate session
-```
+### MCP Server (Port 3001)
+- `GET /health` - Health check
+- `POST /mcp` - MCP protocol requests
+- `GET /mcp` - Server-Sent Events (SSE)
+- `DELETE /mcp` - Terminate session
+
+### LLM Container (Port 11434)
+- `GET /api/tags` - List available models
+- `POST /api/generate` - Generate completions
+- `POST /api/chat` - Chat completions
 
 ## Available Tools
 
-The MCP server provides the following tools:
+The MCP server provides these database tools:
 
 1. **queryDatabase** - Execute raw SQL queries
-2. **insertRecord** - Insert records into tables
+2. **insertRecord** - Insert records into tables  
 3. **getRecords** - Retrieve records from tables
 
-## Database Schema
+## Sample Database Schema
 
-The application includes sample tables:
+The system includes pre-loaded sample data:
 
-- **employees** - Employee information
-- **projects** - Project details
-- **employee_projects** - Employee-project relationships
-
-Sample data is automatically loaded when the PostgreSQL container starts for the first time.
-
-## Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PG_HOST` | `localhost` | PostgreSQL host |
-| `PG_PORT` | `5432` | PostgreSQL port |
-| `PG_DATABASE` | `mcp_database` | Database name |
-| `PG_USER` | `postgres` | Database user |
-| `PG_PASSWORD` | `your_password` | Database password |
-| `PORT` | `3000` | Application port |
+- **employees** - Employee information (id, name, email, department, hire_date)
+- **projects** - Project details (id, name, description, status, start_date, end_date)
+- **employee_projects** - Employee-project relationships (employee_id, project_id, role)
 
 ## Development
 
-### Local Development
+### Local Development Setup
 
+1. **Start PostgreSQL**:
 ```bash
-# Navigate to MCP server directory
-cd mcp-db-server
+cd postgres-db && ./postgres.sh start-dev
+```
 
-# Install dependencies
+2. **Start MCP Server in development mode**:
+```bash
+cd mcp-db-server && ./mcp-server.sh start-dev
+```
+
+3. **Start LLM Container**:
+```bash
+cd llm-container && ./llm.sh start
+```
+
+4. **Start User Agent in development mode**:
+```bash
+cd user-agent
 npm install
-
-# Build TypeScript
-npm run build
-
-# Start HTTP server
-npm run start:http
-
-# Start STDIO server
-npm run start:stdio
+npm run dev
 ```
 
-### Docker Development
+### Testing the Setup
+
+Use the provided test script to validate the entire stack:
 
 ```bash
-# Start PostgreSQL for development
-cd postgres-db
-./postgres.sh start-dev
-cd ..
-
-# Start MCP server in development mode
-cd mcp-db-server
-./mcp-server.sh start-dev
-cd ..
+./test-docker.sh
 ```
+
+This script tests:
+- Container health and connectivity
+- Database operations
+- MCP protocol communication
+- LLM model availability
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Connection refused to PostgreSQL**
-   - Ensure PostgreSQL container is running: `docker-compose ps`
-   - Check logs: `docker-compose logs postgres`
+1. **Containers fail to start**
+   - Check Docker memory allocation (increase to 8GB+)
+   - Verify ports 3001, 3002, 5432, 11434 are available
+   - Run `docker system prune` to clean up resources
 
-2. **Port already in use**
-   - Change the port in `.env` or `docker-compose.yml`
-   - Stop conflicting services
+2. **LLM models not working**
+   - Models download automatically on first startup
+   - Check available models: `cd llm-container && ./llm.sh models`
+   - Increase timeout if models are still downloading
 
-3. **Permission denied**
-   - The container runs as non-root user for security
-   - Check file permissions if mounting volumes
+3. **User Agent can't connect to services**
+   - Verify all containers are running: `docker ps`
+   - Check container logs for errors
+   - Ensure containers are on the same network
 
-### Logs
+4. **Database connection issues**
+   - Verify PostgreSQL is fully started before MCP server
+   - Check database credentials in environment files
+   - Allow extra time for PostgreSQL initialization
+
+### Viewing Logs
+
+Each service provides detailed logging:
 
 ```bash
-# View PostgreSQL logs
-cd postgres-db
-./postgres.sh logs
-cd ..
+# View all container logs
+docker-compose logs -f
 
-# View MCP server logs
-cd mcp-db-server
-./mcp-server.sh logs
-cd ..
+# View specific service logs
+./start-containers.sh  # Shows helpful log commands
 ```
 
-## Security Considerations
+### Resource Requirements
 
-- The application runs as a non-root user inside the container
-- Database credentials should be changed in production
-- Consider using Docker secrets for sensitive data
-- The PostgreSQL container is only accessible within the Docker network
+- **Minimum**: 4GB RAM, 5GB disk space
+- **Recommended**: 8GB RAM, 10GB disk space
+- **For multiple models**: 16GB RAM, 20GB disk space
 
 ## Production Deployment
 
-For production deployment:
+### Security Recommendations
 
-1. Use strong passwords for database
-2. Enable SSL/TLS for database connections
-3. Use environment-specific configuration
-4. Set up proper logging and monitoring
-5. Configure backup strategies for PostgreSQL data
+1. **Change default passwords** in all `.env` files
+2. **Enable SSL/TLS** for database connections
+3. **Use Docker secrets** for sensitive data
+4. **Configure firewall rules** to restrict access
+5. **Set up proper logging** and monitoring
+6. **Regular backup** of PostgreSQL data
 
-# MCP Server Management
-cd mcp-db-server
-./mcp-server.sh start          # Start production server
-./mcp-server.sh start-dev      # Start development server
-./mcp-server.sh logs           # View production logs
-./mcp-server.sh logs-dev       # View development logs
-./mcp-server.sh status         # Show status
-./mcp-server.sh help           # Show all commands
+### Production Checklist
 
-# PostgreSQL Management
-cd postgres-db
-./postgres.sh start            # Start production database
-./postgres.sh start-dev        # Start development database
-./postgres.sh logs             # View production logs
-./postgres.sh logs-dev         # View development logs
-./postgres.sh status           # Show status
-./postgres.sh help             # Show all commands
+- [ ] Update all default passwords
+- [ ] Configure SSL certificates
+- [ ] Set up log aggregation
+- [ ] Configure container restart policies
+- [ ] Set up monitoring and alerts
+- [ ] Plan backup and recovery strategy
+- [ ] Review and limit container permissions
 
 ## License
 
