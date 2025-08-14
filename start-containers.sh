@@ -24,61 +24,32 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
-# Check if containers are already running
-if docker ps --format "table {{.Names}}" | grep -q "mcp-postgres"; then
-    print_info "PostgreSQL container is already running"
+# Stop any existing containers to avoid conflicts
+print_info "Stopping any existing containers to avoid conflicts..."
+docker-compose down 2>/dev/null || true
+
+# Start all services using the main docker-compose file
+print_info "Starting all containers..."
+docker-compose up -d
+
+# Wait for services to be ready
+print_info "Waiting for services to be ready..."
+sleep 20
+
+# Check if all containers are running
+print_info "Checking container status..."
+
+if docker-compose ps | grep -q "Up"; then
+    print_status "All containers started successfully!"
 else
-    print_info "Starting PostgreSQL container..."
-    cd postgres-db && docker-compose up -d postgres && cd ..
-    
-    # Wait for PostgreSQL to be ready
-    print_info "Waiting for PostgreSQL to be ready..."
-    sleep 10
+    echo "❌ Some containers failed to start. Checking logs..."
+    docker-compose logs --tail=10
+    exit 1
 fi
-
-if docker ps --format "table {{.Names}}" | grep -q "mcp-db-server"; then
-    print_info "MCP server container is already running"
-else
-    print_info "Starting MCP server container..."
-    cd mcp-db-server && docker-compose -f docker-compose.mcp.yml up -d && cd ..
-    
-    # Wait for MCP server to be ready
-    print_info "Waiting for MCP server to be ready..."
-    sleep 5
-fi
-
-# Start LLM and User Agent containers using main docker-compose
-print_info "Starting LLM and User Agent containers..."
-
-# Start LLM container first
-if docker ps --format "table {{.Names}}" | grep -q "llm-container"; then
-    print_info "LLM container is already running"
-else
-    print_info "Starting LLM container..."
-    docker-compose up -d llm-container
-    
-    # Wait for LLM service to be ready
-    print_info "Waiting for LLM service to be ready..."
-    sleep 15
-fi
-
-# Start User Agent container (depends on MCP server and LLM)
-if docker ps --format "table {{.Names}}" | grep -q "user-agent"; then
-    print_info "User Agent container is already running"
-else
-    print_info "Starting User Agent container..."
-    docker-compose up -d user-agent
-    
-    # Wait for User Agent to be ready
-    print_info "Waiting for User Agent to be ready..."
-    sleep 5
-fi
-
-print_status "All containers started successfully!"
 
 echo ""
 echo "📊 Container Status:"
-docker ps | grep -E "(mcp|user-agent|llm-container)" || echo "No MCP containers running"
+docker-compose ps
 
 echo ""
 echo "🔗 Access Points:"
@@ -90,13 +61,12 @@ echo "  - User Agent: http://localhost:3002"
 
 echo ""
 echo "📝 Useful Commands:"
-echo "  - View PostgreSQL logs: cd postgres-db && docker-compose logs -f postgres"
-echo "  - View MCP logs: cd mcp-db-server && docker-compose -f docker-compose.mcp.yml logs -f"
+echo "  - View all logs: docker-compose logs -f"
+echo "  - View PostgreSQL logs: docker-compose logs -f postgres-db"
+echo "  - View MCP logs: docker-compose logs -f mcp-db-server"
 echo "  - View LLM logs: docker-compose logs -f llm-container"
 echo "  - View User Agent logs: docker-compose logs -f user-agent"
 echo "  - Stop all containers: ./stop-containers.sh"
-echo "  - Individual container management:"
-echo "    - PostgreSQL: cd postgres-db && ./postgres.sh [start|stop|logs]"
-echo "    - MCP Server: cd mcp-db-server && ./mcp-server.sh [start|stop|logs]"
-echo "    - LLM: cd llm-container && ./llm.sh [start|stop|logs]"
-echo "    - User Agent: cd user-agent && ./user-agent.sh [start|stop|logs]"
+
+echo ""
+echo "🎉 All services are ready! Open http://localhost:3002 to start using the application."

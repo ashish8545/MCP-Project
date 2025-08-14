@@ -95,7 +95,15 @@ git clone <repository-url>
 cd mcp-multi-container
 ```
 
-### 2. Start All Services
+### 2. Clean Up (First Time Only)
+
+If you have any existing MCP containers, clean them up first:
+
+```bash
+./cleanup-containers.sh
+```
+
+### 3. Start All Services
 
 Use the convenient startup script to launch the entire stack:
 
@@ -103,13 +111,9 @@ Use the convenient startup script to launch the entire stack:
 ./start-containers.sh
 ```
 
-This will start all containers in the correct order:
-1. PostgreSQL Database
-2. MCP Database Server
-3. LLM Container (Ollama)
-4. User Agent (Web Interface)
+This will start all containers together using Docker Compose with proper dependency handling.
 
-### 3. Access the Application
+### 4. Access the Application
 
 Once all containers are running:
 
@@ -118,7 +122,7 @@ Once all containers are running:
 - **Ollama API**: http://localhost:11434
 - **PostgreSQL**: localhost:5432
 
-### 4. Using the Web Interface
+### 5. Using the Web Interface
 
 1. Open http://localhost:3002 in your browser
 2. Use natural language to query your database:
@@ -127,7 +131,7 @@ Once all containers are running:
    - "Who is working on project Alpha?"
 3. The system will convert your requests to SQL and execute them
 
-### 5. Stop All Services
+### 6. Stop All Services
 
 ```bash
 ./stop-containers.sh
