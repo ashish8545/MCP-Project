@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>🙋 Ask me</title>
+	<link rel="stylesheet" href="/styles.css" />
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+	<div class="app">
+		<header class="app-header">
+			<h1>🙋 Ask me</h1>
+			<p>I'm here to help you!</p>
+		</header>
+
+		<main class="chat" id="chat">
+			<!-- Messages will be prepended here -->
+		</main>
+
+		<footer class="composer">
+			<div id="status" class="status" role="status" aria-live="polite"></div>
+			<div class="composer-row">
+				<select id="model-select" class="model-select" aria-label="Model">
+					<option value="llama2">Llama2 Locally</option>
+					<option value="gpt">GPT</option>
+				</select>
+				<textarea id="user-prompt" class="prompt" rows="1" placeholder="Share what's on your mind..." aria-label="Your message"></textarea>
+				<button id="submit-btn" class="send" aria-label="Send" title="Send">
+					<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+						<path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+					</svg>
+				</button>
+			</div>
+		</footer>
+	</div>
+
+	<script src="/app.js" defer></script>
+</body>
+</html>

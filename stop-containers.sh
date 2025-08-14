@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Helper script to stop MCP Database Server containers
+# Helper script to stop all MCP containers
 set -e
 
-echo "🛑 Stopping MCP Database Server containers..."
+echo "🛑 Stopping all MCP containers..."
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -24,26 +24,12 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
-# Stop MCP server container
-if docker ps --format "table {{.Names}}" | grep -q "mcp-db-server"; then
-    print_info "Stopping MCP server container..."
-    cd mcp-db-server && docker-compose -f docker-compose.mcp.yml down && cd ..
-    print_status "MCP server container stopped"
-else
-    print_info "MCP server container is not running"
-fi
-
-# Stop PostgreSQL container
-if docker ps --format "table {{.Names}}" | grep -q "mcp-postgres"; then
-    print_info "Stopping PostgreSQL container..."
-    cd postgres-db && docker-compose down && cd ..
-    print_status "PostgreSQL container stopped"
-else
-    print_info "PostgreSQL container is not running"
-fi
+# Stop all services using docker-compose
+print_info "Stopping all containers..."
+docker-compose down
 
 print_status "All containers stopped successfully!"
 
 echo ""
 echo "📊 Remaining containers:"
-docker ps --filter "name=mcp" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || echo "No MCP containers running"
+docker ps | grep -E "(mcp|user-agent|llm-container)" || echo "No MCP containers running"
