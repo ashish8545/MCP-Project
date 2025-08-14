@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Helper script to start MCP Database Server containers
+# Helper script to start all MCP containers (PostgreSQL, MCP Server, LLM, User Agent)
 set -e
 
-echo "🚀 Starting MCP Database Server containers..."
+echo "🚀 Starting all MCP containers..."
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -43,21 +43,49 @@ else
     cd mcp-db-server && docker-compose -f docker-compose.mcp.yml up -d && cd ..
 fi
 
+# Start LLM container
+if docker ps --format "table {{.Names}}" | grep -q "llm-container"; then
+    print_info "LLM container is already running"
+else
+    print_info "Starting LLM container..."
+    docker-compose up -d llm-container
+    
+    # Wait for LLM service to be ready
+    print_info "Waiting for LLM service to be ready..."
+    sleep 15
+fi
+
+# Start User Agent container (depends on MCP server and LLM)
+if docker ps --format "table {{.Names}}" | grep -q "user-agent"; then
+    print_info "User Agent container is already running"
+else
+    print_info "Starting User Agent container..."
+    docker-compose up -d user-agent
+fi
+
 print_status "All containers started successfully!"
 
 echo ""
 echo "📊 Container Status:"
-docker ps --filter "name=mcp" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+docker ps --filter "name=mcp\|user-agent\|llm-container" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
 echo ""
 echo "🔗 Access Points:"
-echo "  - Health check: http://localhost:3000/health"
-echo "  - MCP endpoint: http://localhost:3000/mcp"
+echo "  - Health check: http://localhost:3001/health"
+echo "  - MCP endpoint: http://localhost:3001/mcp"
 echo "  - PostgreSQL: localhost:5432"
+echo "  - LLM API: http://localhost:11434"
+echo "  - User Agent: http://localhost:3002"
 
 echo ""
 echo "📝 Useful Commands:"
 echo "  - View PostgreSQL logs: cd postgres-db && docker-compose logs -f postgres"
 echo "  - View MCP logs: cd mcp-db-server && docker-compose -f docker-compose.mcp.yml logs -f"
-echo "  - Stop MCP server: cd mcp-db-server && docker-compose -f docker-compose.mcp.yml down"
-echo "  - Stop PostgreSQL: cd postgres-db && docker-compose down"
+echo "  - View LLM logs: docker-compose logs -f llm-container"
+echo "  - View User Agent logs: docker-compose logs -f user-agent"
+echo "  - Stop all containers: ./stop-containers.sh"
+echo "  - Individual container management:"
+echo "    - PostgreSQL: cd postgres-db && ./postgres.sh [start|stop|logs]"
+echo "    - MCP Server: cd mcp-db-server && ./mcp-server.sh [start|stop|logs]"
+echo "    - LLM: cd llm-container && ./llm.sh [start|stop|logs]"
+echo "    - User Agent: cd user-agent && ./user-agent.sh [start|stop|logs]"
