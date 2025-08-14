@@ -67,7 +67,7 @@ print_status "All containers started successfully!"
 
 echo ""
 echo "📊 Container Status:"
-docker ps --filter "name=mcp" --filter "name=user-agent" --filter "name=llm-container" --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+docker ps | grep -E "(mcp|user-agent|llm-container)" || echo "No MCP containers running"
 
 echo ""
 echo "🔗 Access Points:"
