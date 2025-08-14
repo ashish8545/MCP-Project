@@ -53,6 +53,7 @@ body {
 	display: flex;
 	flex-direction: column-reverse; /* newest at bottom visually; prepend in DOM */
 	gap: 12px;
+	width: 900px;
 }
 
 .message {
@@ -70,8 +71,12 @@ body {
 	line-height: 1.5;
 }
 .message.user .bubble {
-	background: linear-gradient(135deg, #fff, #fff7f0);
+	background: linear-gradient(358deg, #ee9c73, #e88463);
 	border: 1px solid #fde4d3;
+}
+.message.user {
+	justify-content: end;
+	margin-left: 150px;
 }
 .message.assistant .bubble {
 	background: linear-gradient(135deg, #fffdfc, #fff7f5);

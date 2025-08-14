@@ -364,12 +364,6 @@ CRITICAL: First, carefully understand what the user is asking for. Pay attention
 - Count vs. details: "how many" vs. "show me all"
 - Time-based queries: "currently active", "recent hires", etc.
 
-VERY IMPORTANT: The user asked: "${query}"
-- If they asked for "more than 50k", answer about employees with salary > 50000
-- If they asked for "less than 50k", answer about employees with salary < 50000
-- If they asked for "above 50k", answer about employees with salary > 50000
-- If they asked for "below 50k", answer about employees with salary < 50000
-
 DO NOT mention:
 - Database queries, SQL, or technical details
 - JSON objects, data structures, or internal workings
@@ -379,14 +373,12 @@ DO NOT mention:
 
 DO:
 - Answer the user's question directly and naturally
+- Break lines for readability and use bullet points if needed
 - Use conversational language
 - Focus on what the user actually wants to know
 - Be helpful and informative
 - If there's no data, explain what that means in simple terms
 - Make sure your answer matches the user's original question exactly
-
-Example good response: "There are no employees with a salary below 50K in the company."
-Example bad response: "The database query returned a JSON object with an empty array, indicating no employees have salaries below 50K."
 
 Provide a natural, conversational answer:`;
 

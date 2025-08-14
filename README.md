@@ -38,7 +38,6 @@ MCP Project/
 │   └── user-agent.sh          # Management script
 ├── llm-container/             # LLM Service
 │   ├── Dockerfile             # Ollama container setup
-│   ├── init-models.sh         # Model initialization
 │   └── llm.sh                 # Management script
 ├── mcp-db-server/             # MCP Database Server
 │   ├── http.ts                # HTTP server implementation

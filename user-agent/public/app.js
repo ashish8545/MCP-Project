@@ -60,20 +60,51 @@ async function submitQuery() {
 	appendMessage('user', prompt);
 	promptInput.value = '';
 	autoSizeTextarea(promptInput);
-	setLoading(true);
 
+	// Greeting detection
+	const greetingRegex = /^(hi|hello|hey|greetings|good\s*(morning|afternoon|evening))\s*[!.]?$/i;
+	if (greetingRegex.test(prompt)) {
+		appendMessage('assistant', 'Hi there! How can I help you today?');
+		showStatus('');
+		return;
+	}
+
+	setLoading(true);
 	try {
 		// Non-technical guiding statuses
 		showStatus('Thinking...');
 
-		// Step 1: Generate SQL (kept internal)
-		const sqlResponse = await fetch('/api/llm/generate-sql', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ query: prompt, model })
-		});
-		const sqlData = await sqlResponse.json();
-		if (!sqlData.success) throw new Error(sqlData.error || 'Could not think of an approach.');
+		let sqlData = '';
+		if (model === 'llama2') {
+			// Step 1: Generate SQL (kept internal)
+			const sqlResponse = await fetch('/api/llm/generate-sql', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ query: prompt, model })
+			});
+			sqlData = await sqlResponse.json();
+			if (!sqlData.success) throw new Error(sqlData.error || 'Could not think of an approach.');
+		} else {
+			// Step 1: Generate SQL using OpenAI
+			sqlData = await client.chat.completions.create({
+				model: 'gpt-5',
+				messages: [
+					{
+						role: 'system',
+						content: `You are an expert SQL generator. Convert the user's request into a SQL query.`
+					},
+					{ role: 'user', content: prompt }
+				],
+				max_tokens: 500,
+				stop: ['\n']
+			});
+
+			if (!sqlData.choices || sqlData.choices.length === 0) {
+				throw new Error('Could not think of an approach.');
+			}
+			sqlData.sql = sqlData.choices[0].message.content.trim();
+		}
+		
 
 		showStatus('Gathering information...');
 
@@ -93,18 +124,39 @@ async function submitQuery() {
 
 		showStatus('Almost there...');
 
-		// Step 3: Natural language explanation
-		const nlResponse = await fetch('/api/llm/explain-results', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				query: prompt,
-				results: mcpData.result.content,
-				model
-			})
-		});
-		const nlData = await nlResponse.json();
-		if (!nlData.success) throw new Error(nlData.error || 'I had trouble finishing that thought.');
+		let nlData = {};
+		if (model === 'llama2') {
+			// Step 3: Natural language explanation
+			const nlResponse = await fetch('/api/llm/explain-results', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: prompt,
+					results: mcpData.result.content,
+					model
+				})
+			});
+			nlData = await nlResponse.json();
+			if (!nlData.success) throw new Error(nlData.error || 'I had trouble finishing that thought.');
+		} else {
+			// Step 3: Natural language explanation using OpenAI
+			const nlResponse = await client.chat.completions.create({
+				model: 'gpt-5',
+				messages: [
+					{
+						role: 'system',
+						content: `You are an expert at explaining SQL results in simple terms.`
+					},
+					{ role: 'user', content: `Explain these results in simple terms:\n\n${mcpData.result.content}` }
+				],
+				max_tokens: 500,
+				stop: ['\n']
+			});
+			if (!nlResponse.choices || nlResponse.choices.length === 0) {
+				throw new Error('I had trouble finishing that thought.');
+			}
+			nlData = { explanation: nlResponse.choices[0].message.content.trim() };
+		}
 
 		appendMessage('assistant', nlData.explanation);
 		showStatus('');
