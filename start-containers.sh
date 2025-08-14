@@ -41,9 +41,16 @@ if docker ps --format "table {{.Names}}" | grep -q "mcp-db-server"; then
 else
     print_info "Starting MCP server container..."
     cd mcp-db-server && docker-compose -f docker-compose.mcp.yml up -d && cd ..
+    
+    # Wait for MCP server to be ready
+    print_info "Waiting for MCP server to be ready..."
+    sleep 5
 fi
 
-# Start LLM container
+# Start LLM and User Agent containers using main docker-compose
+print_info "Starting LLM and User Agent containers..."
+
+# Start LLM container first
 if docker ps --format "table {{.Names}}" | grep -q "llm-container"; then
     print_info "LLM container is already running"
 else
@@ -61,6 +68,10 @@ if docker ps --format "table {{.Names}}" | grep -q "user-agent"; then
 else
     print_info "Starting User Agent container..."
     docker-compose up -d user-agent
+    
+    # Wait for User Agent to be ready
+    print_info "Waiting for User Agent to be ready..."
+    sleep 5
 fi
 
 print_status "All containers started successfully!"
